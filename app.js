@@ -52,6 +52,7 @@ const state = {
   mains: 16,
   crosses: 19,
   gauge: 1.3,
+  stringColor: "#4d5c70",
   showGhost: true,
   mono: false,
   stencilColor: "#e8002d",
@@ -155,7 +156,7 @@ function render() {
   preview.innerHTML = `
     <ellipse cx="0" cy="0" rx="${a + 10}" ry="${b + 10}" fill="#0b0e13" stroke="#3d4b5e" stroke-width="9"/>
     <ellipse cx="0" cy="0" rx="${a}" ry="${b}" fill="#141a22"/>
-    ${strokeLines("#4d5c70", state.gauge)}
+    ${strokeLines(state.stringColor, state.gauge)}
     ${designLayers}
   `;
 }
@@ -231,6 +232,7 @@ $("pattern").addEventListener("change", (e) => {
 $("show-ghost").addEventListener("change", (e) => { state.showGhost = e.target.checked; render(); });
 $("mono").addEventListener("change", (e) => { state.mono = e.target.checked; render(); });
 $("stencil-color").addEventListener("input", (e) => { state.stencilColor = e.target.value; render(); });
+$("string-color").addEventListener("input", (e) => { state.stringColor = e.target.value; render(); });
 $("export-btn").addEventListener("click", exportSVG);
 
 // file input + drag & drop
