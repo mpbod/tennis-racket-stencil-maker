@@ -19,10 +19,6 @@ It's a fully static site — no build step:
 npx serve .
 ```
 
-## Deploying to Vercel
+## Deployment
 
-```sh
-npx vercel deploy
-```
-
-Or connect the repo in the Vercel dashboard; the included `vercel.json` marks it as a static deployment.
+Deployed automatically to GitHub Pages on every push to `main` via `.github/workflows/pages.yml`. In the repo settings, set **Settings → Pages → Source** to **GitHub Actions** (one-time setup).
