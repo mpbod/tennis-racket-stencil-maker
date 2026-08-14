@@ -155,8 +155,8 @@ function render() {
   }
 
   preview.innerHTML = `
-    <ellipse cx="0" cy="0" rx="${a + 10}" ry="${b + 10}" fill="#b5622f" stroke="#1e2a4a" stroke-width="9"/>
-    <ellipse cx="0" cy="0" rx="${a}" ry="${b}" fill="#c1683c"/>
+    <ellipse cx="0" cy="0" rx="${a + 5}" ry="${b + 5}" fill="none" stroke="#1e2a4a" stroke-width="10"/>
+    <ellipse cx="0" cy="0" rx="${a}" ry="${b}" fill="rgba(255,255,255,0.06)"/>
     ${strokeLines(state.stringColor, state.gauge)}
     ${designLayers}
   `;
