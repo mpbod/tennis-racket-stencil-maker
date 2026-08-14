@@ -108,6 +108,52 @@ button.small {
 }
 button.small:hover { border-color: var(--accent); filter: none; }
 
+#history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+#history-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.8rem;
+}
+#history-list img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  background: white;
+  border-radius: 4px;
+}
+#history-list .h-load {
+  flex: 1;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.8rem;
+}
+#history-list .h-load:hover { color: var(--accent); }
+#history-list .h-del {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0 0.2rem;
+  font-size: 0.9rem;
+}
+#history-list .h-del:hover { color: var(--accent); }
+
 #preview-wrap {
   background: var(--panel);
   border: 1px solid var(--border);

@@ -93,9 +93,10 @@ function loadFile(file) {
 }
 
 function setDesign(href, w, h, name) {
-  state.design = { href, w, h };
+  state.design = { href, w, h, name };
   $("drop-label").innerHTML = `Loaded: <strong>${name.replace(/</g, "&lt;")}</strong><br/>click to replace`;
   exportBtn.disabled = false;
+  $("save-snapshot").disabled = false;
   render();
 }
 
@@ -159,6 +160,7 @@ function render() {
     ${strokeLines(state.stringColor, state.gauge)}
     ${designLayers}
   `;
+  persist();
 }
 
 // ---------- export ----------
@@ -203,6 +205,92 @@ function exportSVG() {
   link.download = "tennis-string-stencil.svg";
   link.click();
   URL.revokeObjectURL(url);
+}
+
+// ---------- persistence & history ----------
+
+const STORE_KEY = "tsm:current";
+const HISTORY_KEY = "tsm:history";
+let saveTimer = null;
+
+function persist() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    } catch { /* quota exceeded (huge design) — settings just won't persist */ }
+  }, 300);
+}
+
+function applyState(saved) {
+  Object.assign(state, saved);
+  // sync controls
+  $("scale").value = state.scale; $("scale-val").textContent = `${Math.round(state.scale * 100)}%`;
+  $("dx").value = state.dx; $("dx-val").textContent = `${state.dx} mm`;
+  $("dy").value = state.dy; $("dy-val").textContent = `${state.dy} mm`;
+  $("rot").value = state.rot; $("rot-val").textContent = `${state.rot}°`;
+  $("gauge").value = state.gauge; $("gauge-val").textContent = `${state.gauge.toFixed(2)} mm`;
+  $("head-size").value = String(state.headSize);
+  $("pattern").value = `${state.mains}x${state.crosses}`;
+  $("string-color").value = state.stringColor;
+  $("stencil-color").value = state.stencilColor;
+  $("show-ghost").checked = state.showGhost;
+  $("mono").checked = state.mono;
+  if (state.design) {
+    $("drop-label").innerHTML = `Loaded: <strong>${(state.design.name || "design").replace(/</g, "&lt;")}</strong><br/>click to replace`;
+    exportBtn.disabled = false;
+    $("save-snapshot").disabled = false;
+  }
+  render();
+}
+
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch { return []; }
+}
+
+function renderHistory() {
+  const list = $("history-list");
+  const entries = getHistory();
+  list.innerHTML = entries.length ? "" : `<li class="hint" style="border:none;background:none">No snapshots yet</li>`;
+  entries.forEach((entry, i) => {
+    const li = document.createElement("li");
+    const img = document.createElement("img");
+    img.src = entry.state.design.href;
+    img.alt = "";
+    const load = document.createElement("button");
+    load.className = "h-load";
+    load.textContent = entry.label;
+    load.title = "Load this snapshot";
+    load.addEventListener("click", () => applyState(structuredClone(entry.state)));
+    const del = document.createElement("button");
+    del.className = "h-del";
+    del.textContent = "✕";
+    del.title = "Delete";
+    del.addEventListener("click", () => {
+      const h = getHistory(); h.splice(i, 1);
+      try { localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); } catch {}
+      renderHistory();
+    });
+    li.append(img, load, del);
+    list.appendChild(li);
+  });
+}
+
+function saveSnapshot() {
+  if (!state.design) return;
+  const entries = getHistory();
+  const time = new Date().toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  entries.unshift({ label: `${state.design.name || "design"} — ${time}`, state: JSON.parse(JSON.stringify(state)) });
+  while (entries.length) {
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(entries.slice(0, 12)));
+      break;
+    } catch {
+      entries.pop(); // quota exceeded — drop oldest and retry
+      if (!entries.length) return;
+    }
+  }
+  renderHistory();
 }
 
 // ---------- wiring ----------
@@ -275,4 +363,13 @@ preview.addEventListener("pointermove", (e) => {
 ["pointerup", "pointercancel"].forEach((ev) =>
   preview.addEventListener(ev, () => { dragging = null; }));
 
+$("save-snapshot").addEventListener("click", saveSnapshot);
+
+// restore last session
+try {
+  const saved = JSON.parse(localStorage.getItem(STORE_KEY));
+  if (saved && typeof saved === "object") applyState(saved);
+} catch { /* corrupt storage — start fresh */ }
+
+renderHistory();
 render();
