@@ -235,6 +235,16 @@ $("stencil-color").addEventListener("input", (e) => { state.stencilColor = e.tar
 $("string-color").addEventListener("input", (e) => { state.stringColor = e.target.value; render(); });
 $("export-btn").addEventListener("click", exportSVG);
 
+// alignment buttons
+function setOffsets(dx, dy) {
+  if (dx !== null) { state.dx = dx; $("dx").value = dx; $("dx-val").textContent = `${dx} mm`; }
+  if (dy !== null) { state.dy = dy; $("dy").value = dy; $("dy-val").textContent = `${dy} mm`; }
+  render();
+}
+$("align-center").addEventListener("click", () => setOffsets(0, 0));
+$("align-h").addEventListener("click", () => setOffsets(0, null));
+$("align-v").addEventListener("click", () => setOffsets(null, 0));
+
 // file input + drag & drop
 const dropZone = $("drop-zone");
 $("file-input").addEventListener("change", (e) => loadFile(e.target.files[0]));

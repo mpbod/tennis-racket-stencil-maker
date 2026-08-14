@@ -95,6 +95,18 @@ button:not(:disabled):hover { filter: brightness(1.1); }
 
 .hint { font-size: 0.75rem; color: var(--muted); margin: 0; }
 
+.btn-row { display: flex; gap: 0.4rem; }
+button.small {
+  flex: 1;
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-weight: 500;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.3rem;
+}
+button.small:hover { border-color: var(--accent); filter: none; }
+
 #preview-wrap {
   background: var(--panel);
   border: 1px solid var(--border);
