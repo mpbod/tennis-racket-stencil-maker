@@ -155,7 +155,7 @@ button.small:hover { border-color: var(--accent); filter: none; }
 #history-list .h-del:hover { color: var(--accent); }
 
 #preview-wrap {
-  background: var(--panel);
+  background: url("assets/court.jpg") center / cover no-repeat;
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1rem;
