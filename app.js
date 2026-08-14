@@ -96,6 +96,7 @@ function setDesign(href, w, h, name) {
   state.design = { href, w, h, name };
   $("drop-label").innerHTML = `Loaded: <strong>${name.replace(/</g, "&lt;")}</strong><br/>click to replace`;
   exportBtn.disabled = false;
+  $("laser-btn").disabled = false;
   $("save-snapshot").disabled = false;
   render();
 }
@@ -207,6 +208,114 @@ function exportSVG() {
   URL.revokeObjectURL(url);
 }
 
+// ---------- laser cut export ----------
+
+// Trace the design's silhouette into closed loops (pixel-edge polygons).
+// Returns loops as arrays of [x, y] lattice points in grid coordinates.
+function traceContours(mask, w, h) {
+  // Directed boundary edges, filled cell on the left of travel direction.
+  const at = (x, y) => (x >= 0 && y >= 0 && x < w && y < h) ? mask[y * w + x] : 0;
+  const edges = new Map(); // "x,y" start vertex -> [endX, endY]
+  const addEdge = (x1, y1, x2, y2) => edges.set(`${x1},${y1}`, [x2, y2]);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (!at(x, y)) continue;
+      if (!at(x, y - 1)) addEdge(x, y, x + 1, y);         // top edge, rightward
+      if (!at(x + 1, y)) addEdge(x + 1, y, x + 1, y + 1); // right edge, down
+      if (!at(x, y + 1)) addEdge(x + 1, y + 1, x, y + 1); // bottom edge, left
+      if (!at(x - 1, y)) addEdge(x, y + 1, x, y);         // left edge, up
+    }
+  }
+  const loops = [];
+  while (edges.size) {
+    const [startKey, first] = edges.entries().next().value;
+    const [sx, sy] = startKey.split(",").map(Number);
+    const loop = [[sx, sy]];
+    edges.delete(startKey);
+    let [cx, cy] = first;
+    while (cx !== sx || cy !== sy) {
+      loop.push([cx, cy]);
+      const key = `${cx},${cy}`;
+      const next = edges.get(key);
+      if (!next) break;
+      edges.delete(key);
+      [cx, cy] = next;
+    }
+    // merge collinear runs
+    const out = [];
+    for (const p of loop) {
+      const n = out.length;
+      if (n >= 2) {
+        const [ax, ay] = out[n - 2], [bx, by] = out[n - 1];
+        if ((bx - ax) * (p[1] - ay) - (by - ay) * (p[0] - ax) === 0) out.pop();
+      }
+      out.push(p);
+    }
+    if (out.length >= 3) loops.push(out);
+  }
+  return loops;
+}
+
+function exportLaserSVG() {
+  if (!state.design) return;
+  const img = new Image();
+  img.onload = () => {
+    const { a, b } = headEllipse(state.headSize);
+    const p = designPlacement();
+
+    // Rasterise the design and build a filled/empty mask.
+    const res = 500;
+    const gw = img.naturalWidth >= img.naturalHeight ? res : Math.round(res * img.naturalWidth / img.naturalHeight);
+    const gh = img.naturalWidth >= img.naturalHeight ? Math.round(res * img.naturalHeight / img.naturalWidth) : res;
+    const canvas = document.createElement("canvas");
+    canvas.width = gw; canvas.height = gh;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0, gw, gh);
+    const data = ctx.getImageData(0, 0, gw, gh).data;
+    let hasAlpha = false;
+    for (let i = 3; i < data.length; i += 4) if (data[i] < 250) { hasAlpha = true; break; }
+    const mask = new Uint8Array(gw * gh);
+    for (let i = 0; i < gw * gh; i++) {
+      const r = data[i * 4], g = data[i * 4 + 1], bl = data[i * 4 + 2], al = data[i * 4 + 3];
+      // With transparency: any visible pixel is part of the shape.
+      // Without: treat dark pixels as the shape (white paper drops out).
+      mask[i] = hasAlpha ? (al > 127 ? 1 : 0) : ((0.2126 * r + 0.7152 * g + 0.0722 * bl) < 200 ? 1 : 0);
+    }
+
+    const loops = traceContours(mask, gw, gh);
+    // grid px -> design-local mm -> placed mm
+    const sx = p.w / gw, sy = p.h / gh;
+    const rad = state.rot * Math.PI / 180, cos = Math.cos(rad), sin = Math.sin(rad);
+    const place = ([gx, gy]) => {
+      const lx = p.x + gx * sx, ly = p.y + gy * sy;
+      return [state.dx + lx * cos - ly * sin, state.dy + lx * sin + ly * cos];
+    };
+    const paths = loops.map((loop) =>
+      `<path d="M ${loop.map((pt) => place(pt).map((v) => v.toFixed(2)).join(" ")).join(" L ")} Z"/>`
+    ).join("\n  ");
+
+    const pad = 15;
+    const W = 2 * (a + pad), H = 2 * (b + pad);
+    const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${W.toFixed(2)}mm" height="${H.toFixed(2)}mm" viewBox="${(-a - pad).toFixed(2)} ${(-b - pad).toFixed(2)} ${W.toFixed(2)} ${H.toFixed(2)}">
+  <!-- Laser cut stencil — all paths are cut lines. Units: mm, cut at 100% scale. -->
+  <!-- Outer oval = inside of a ${state.headSize} sq in head. -->
+  <g fill="none" stroke="#ff0000" stroke-width="0.1">
+  <ellipse cx="0" cy="0" rx="${a.toFixed(2)}" ry="${b.toFixed(2)}"/>
+  ${paths}
+  </g>
+</svg>`;
+    const blob = new Blob([svg], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "tennis-stencil-lasercut.svg";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+  img.src = state.design.href;
+}
+
 // ---------- persistence & history ----------
 
 const STORE_KEY = "tsm:current";
@@ -239,6 +348,7 @@ function applyState(saved) {
   if (state.design) {
     $("drop-label").innerHTML = `Loaded: <strong>${(state.design.name || "design").replace(/</g, "&lt;")}</strong><br/>click to replace`;
     exportBtn.disabled = false;
+  $("laser-btn").disabled = false;
     $("save-snapshot").disabled = false;
   }
   render();
@@ -322,6 +432,7 @@ $("mono").addEventListener("change", (e) => { state.mono = e.target.checked; ren
 $("stencil-color").addEventListener("input", (e) => { state.stencilColor = e.target.value; render(); });
 $("string-color").addEventListener("input", (e) => { state.stringColor = e.target.value; render(); });
 $("export-btn").addEventListener("click", exportSVG);
+$("laser-btn").addEventListener("click", exportLaserSVG);
 
 // alignment buttons
 function setOffsets(dx, dy) {
