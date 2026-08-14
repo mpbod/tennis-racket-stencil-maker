@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tennis String Stencil Maker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🎾</text></svg>" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header>
+  <h1>🎾 Tennis String Stencil Maker</h1>
+  <p>Upload a design, preview it on the string bed, export a print-ready stencil SVG.</p>
+</header>
+
+<main>
+  <aside id="controls">
+    <section>
+      <h2>Design</h2>
+      <label class="file-drop" id="drop-zone">
+        <input type="file" id="file-input" accept="image/*,.svg" />
+        <span id="drop-label">Drop an image or SVG here,<br/>or click to browse</span>
+      </label>
+    </section>
+
+    <section>
+      <h2>Placement</h2>
+      <label>Scale <span class="val" id="scale-val"></span>
+        <input type="range" id="scale" min="0.05" max="1.5" step="0.01" value="0.6" />
+      </label>
+      <label>Horizontal offset <span class="val" id="dx-val"></span>
+        <input type="range" id="dx" min="-150" max="150" step="1" value="0" />
+      </label>
+      <label>Vertical offset <span class="val" id="dy-val"></span>
+        <input type="range" id="dy" min="-200" max="200" step="1" value="0" />
+      </label>
+      <label>Rotation <span class="val" id="rot-val"></span>
+        <input type="range" id="rot" min="-180" max="180" step="1" value="0" />
+      </label>
+    </section>
+
+    <section>
+      <h2>Racket</h2>
+      <label>Head size
+        <select id="head-size">
+          <option value="95">95 sq in</option>
+          <option value="98">98 sq in</option>
+          <option value="100" selected>100 sq in (standard)</option>
+          <option value="104">104 sq in</option>
+          <option value="110">110 sq in (oversize)</option>
+        </select>
+      </label>
+      <label>String pattern
+        <select id="pattern">
+          <option value="16x19" selected>16 × 19 (open)</option>
+          <option value="16x18">16 × 18</option>
+          <option value="18x20">18 × 20 (dense)</option>
+        </select>
+      </label>
+      <label>String thickness <span class="val" id="gauge-val"></span>
+        <input type="range" id="gauge" min="1.1" max="1.6" step="0.05" value="1.3" />
+      </label>
+    </section>
+
+    <section>
+      <h2>Preview</h2>
+      <label class="check"><input type="checkbox" id="show-ghost" checked /> Show faint full design</label>
+      <label class="check"><input type="checkbox" id="mono" /> Stencil mode (single colour)</label>
+      <label>Stencil colour <input type="color" id="stencil-color" value="#e8002d" /></label>
+    </section>
+
+    <section>
+      <h2>Export</h2>
+      <button id="export-btn" disabled>Download stencil SVG</button>
+      <p class="hint">Exports at true size in millimetres with the head outline and centre cross-hairs for alignment. Print at 100% scale.</p>
+    </section>
+  </aside>
+
+  <div id="preview-wrap">
+    <svg id="preview" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+</main>
+
+<footer>Strings-only preview shows exactly where paint will land. Made with Claude Code.</footer>
+<script type="module" src="app.js"></script>
+</body>
+</html>
