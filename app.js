@@ -52,7 +52,7 @@ const state = {
   mains: 16,
   crosses: 19,
   gauge: 1.3,
-  stringColor: "#4d5c70",
+  stringColor: "#ece2d0",
   showGhost: true,
   mono: false,
   stencilColor: "#e8002d",
@@ -154,8 +154,8 @@ function render() {
   }
 
   preview.innerHTML = `
-    <ellipse cx="0" cy="0" rx="${a + 10}" ry="${b + 10}" fill="#0b0e13" stroke="#3d4b5e" stroke-width="9"/>
-    <ellipse cx="0" cy="0" rx="${a}" ry="${b}" fill="#141a22"/>
+    <ellipse cx="0" cy="0" rx="${a + 10}" ry="${b + 10}" fill="#b5622f" stroke="#1e2a4a" stroke-width="9"/>
+    <ellipse cx="0" cy="0" rx="${a}" ry="${b}" fill="#c1683c"/>
     ${strokeLines(state.stringColor, state.gauge)}
     ${designLayers}
   `;

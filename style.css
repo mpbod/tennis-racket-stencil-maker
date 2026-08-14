@@ -1,11 +1,12 @@
+/* Clay court palette — terracotta, navy, cream */
 :root {
-  --bg: #10141a;
-  --panel: #1a212b;
-  --panel2: #212a36;
-  --text: #e8edf4;
-  --muted: #93a1b3;
-  --accent: #b6f34c;
-  --border: #2e3947;
+  --bg: #f5ede2;
+  --panel: #fdf8f0;
+  --panel2: #f0e5d5;
+  --text: #1e2a4a;
+  --muted: #7a6a58;
+  --accent: #c1440e;
+  --border: #ddcdb8;
 }
 
 * { box-sizing: border-box; }
@@ -82,7 +83,7 @@ input[type="color"] { height: 2rem; padding: 0.1rem; width: 4rem; }
 
 button {
   background: var(--accent);
-  color: #14210a;
+  color: #fdf8f0;
   font-weight: 700;
   border: none;
   border-radius: 8px;
